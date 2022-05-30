@@ -1,5 +1,21 @@
 import string
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    SHIP = '\033[48;5;11m'
+    HIT = '\033[48;5;10m'
+    MISS = '\033[48;5;9m'
+    HITME = '\033[48;5;9m'
+    SUNK = '\033[48;5;16m'
+
 class Game():
   def __init__(self):
     self.board = [[0 for i in range(10)] for i in range(10)]
@@ -21,15 +37,31 @@ class Game():
     self.enemy_shots = []
     self.shots = []
 
-
-
     self.start_loop()
   
+  def warn(self, msg):
+    print(bcolors.FAIL + msg + bcolors.ENDC)
+
   def l2n(self,coord):
     return [ord(coord[0])-65,int(coord[1])]
+
   def n2l(self,coord):
     return [chr(coord[0]+65),int(coord[1])]
 
+  def key():
+    print(r"""
+    KEY FOR YOUR BOARD:
+    0: No battleship
+    1-5: battleship of n length
+    8: hit
+    9: sunk
+
+    KEY FOR OPPONENTS BOARD:
+    0: unknown
+    8: hit
+    9: sink
+    """)
+  
   def get_value(self, coord):
     coord = self.l2n(coord)
     return self.board[coord[1]][coord[0]]
@@ -51,6 +83,9 @@ class Game():
         self.board[j][i] = self.ships.get(ship)+1
 
   def place_ship(self, ship, start, stop):
+    if self.check_intersect(start, stop):
+      self.warn("Ship intersects with another ship.")
+      return False
     self.placed_ships[ship] = [start, stop]
     return True
 
@@ -92,10 +127,87 @@ class Game():
     print()
     print(f'    YOUR BOARD                      |    OPPONENT\'S BOARD')
     print(f'    {letters}    |    {letters}')
+
+    board = []
+
     for i in range(10):
-      print(f" {i} {self.board[i]}   | {i} {self.enemy_board[i]}")
+      row = []
+      for j in range(10):
+        if self.board[i][j] == 0:
+          row.append("0, ")
+        elif self.board[i][j] == 8:
+          row.append(f"{bcolors.HITME}8, {bcolors.ENDC}")
+        else:
+          row.append(f"{bcolors.SHIP}{self.board[i][j]}, {bcolors.ENDC}")
+      board.append(row)
+
+    enemy = []
+    for i in range(10):
+      row = []
+      for j in range(10):
+        if self.enemy_board[i][j] == 0:
+          row.append("0, ")
+        elif self.enemy_board[i][j] == 8:
+          row.append(f"{bcolors.HIT}{self.enemy_board[i][j]}, {bcolors.ENDC}")
+        else:
+          row.append(f"{bcolors.SHIP}{self.enemy_board[i][j]}, {bcolors.ENDC}")
+      enemy.append(row)
+
+    for i in range(10):
+      print(i, end="  [")
+      for j in range(10):
+        print(f"{board[i][j]}", end="")
+      print(f"\b\b]   | {i} [", end="")
+      for j in range(10):
+        print(f"{enemy[j][i]}", end="")
+      print(f"\b\b]")
+
+
+  
+
+    # for i in range(10):
+    #   print(f" {i} {self.board[i]}   | {i} {self.enemy_board[i]}")
     print()
 
+
+  # usage: line_intersection((a, b), (c, d))
+  # a, b, c, d = (x, y)
+  
+  def check_intersect(self, start, stop):
+    # print(start, stop)
+    start = self.l2n(start)
+    stop = self.l2n(stop)
+    # check to make sure the ship is going right or down
+    # if the ship is going left or up, reverse the start and stop
+    if start[0] > stop[0] or start[1] > stop[1]:
+      start, stop = stop, start
+
+    # code below works for down and right directions
+    checked = []
+    for i in range(start[0],stop[0]+1):
+      for j in range(start[1],stop[1]+1):
+        checked.append(self.board[j][i])
+
+    if any(x in checked for x in [1,2,3,4,5]):
+      return(True)
+    else:
+      return(False)
+
+  def line_intersection(self, line1, line2):
+    xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+    ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
+
+    def det(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    div = det(xdiff, ydiff)
+    if div == 0:
+       raise Exception('lines do not intersect')
+
+    d = (det(*line1), det(*line2))
+    x = det(d, xdiff) / div
+    y = det(d, ydiff) / div
+    return x, y
 
   def start_loop(self):
     while True:
@@ -114,7 +226,6 @@ class Game():
         print("Invalid command.")
 
   def game_initialize(self):
-    
     while True:
       self.print_board()
       print("Choose a ship to place")
@@ -131,42 +242,45 @@ class Game():
 
       ship = input("Ship: ")
       if ship not in self.ships:
-        print("Invalid ship")
+        self.warn("Invalid ship")
         continue
 
       length = self.ships[ship]
       print("Choose a starting coordinate")
 
-      coord = input("Coordinate: ")
+      coord = input("Coordinate: ").upper()
       if not self.valid_coord(coord):
-        print("Invalid coordinate")
+        self.warn("Invalid coordinate")
         continue
 
       if not self.unused_coord(coord):
-        print("Coordinate already used")
+        self.warn("Invalid Location")
         continue
+
       
       if ship != "dingy":
         print("Choose a direction")
         print("l, r, u, d")
         direction = input("Direction: ")
         if direction not in ["l", "r", "u", "d"]:
-          print("Invalid direction")
+          self.warn("Invalid direction")
           continue
       else:
         direction = "l"
 
       stop = self.hyundai(coord, length, direction)
       if not self.valid_coord(stop):
-        print("Invalid coordinate")
+        self.warn("Invalid coordinate")
         continue
 
       if not self.place_ship(ship, coord, stop):
-        print("Invalid ship placement")
+        self.warn("Invalid ship placement")
         continue
 
       print("Ship placed")
       self.ship_printer(ship, coord, stop)
+      print(coord)
+      print(stop)
       print()
       if len(self.placed_ships) == 5:
         break

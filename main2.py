@@ -1,20 +1,24 @@
+import codecs
+import json
+import pickle
 import string
+import requests
 
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    SHIP = '\033[48;5;11m'
-    HIT = '\033[48;5;10m'
-    MISS = '\033[48;5;9m'
-    HITME = '\033[48;5;9m'
-    SUNK = '\033[48;5;16m'
+  HEADER = '\033[95m'
+  OKBLUE = '\033[94m'
+  OKCYAN = '\033[96m'
+  OKGREEN = '\033[92m'
+  WARNING = '\033[93m'
+  FAIL = '\033[91m'
+  ENDC = '\033[0m'
+  BOLD = '\033[1m'
+  UNDERLINE = '\033[4m'
+  SHIP = '\033[48;5;11m'
+  HIT = '\033[48;5;10m'
+  MISS = '\033[48;5;9m'
+  HITME = '\033[48;5;9m'
+  SUNK = '\033[48;5;16m'
 
 class Game():
   def __init__(self):
@@ -37,6 +41,10 @@ class Game():
     self.enemy_shots = []
     self.shots = []
 
+    self.url = "http://localhost:5050"
+
+    
+
     self.start_loop()
   
   def warn(self, msg):
@@ -47,7 +55,15 @@ class Game():
 
   def n2l(self,coord):
     return [chr(coord[0]+65),int(coord[1])]
+    
+  def pickler(self, board):
+    string_pickle = codecs.encode(pickle.dumps(board), "base64").decode()
+    return string_pickle
 
+  def unpickler(self, string_pickle):
+    unpickled = pickle.loads(codecs.decode(string_pickle, "base64"))
+    return unpickled
+    
   def key():
     print(r"""
     KEY FOR YOUR BOARD:
@@ -98,13 +114,11 @@ class Game():
       return False
     return True
 
-
   def unused_coord(self, coord):
     coord = self.l2n(coord)
     if self.board[coord[1]][coord[0]] == 0:
       return True
     return False
-
 
   def hyundai(self, coord, length, direction):
     if direction == "l":
@@ -169,10 +183,6 @@ class Game():
     #   print(f" {i} {self.board[i]}   | {i} {self.enemy_board[i]}")
     print()
 
-
-  # usage: line_intersection((a, b), (c, d))
-  # a, b, c, d = (x, y)
-  
   def check_intersect(self, start, stop):
     # print(start, stop)
     start = self.l2n(start)
@@ -225,7 +235,14 @@ class Game():
       else:
         print("Invalid command.")
 
+
   def game_initialize(self):
+    req = requests.get(f"{self.url}/new")
+    res = req.json()
+
+    self.id=res.get("id")
+    self.gamecode=res.get("game")
+
     while True:
       self.print_board()
       print("Choose a ship to place")
@@ -283,15 +300,18 @@ class Game():
       print(stop)
       print()
       if len(self.placed_ships) == 5:
+        data = json.dumps({"id": self.id, "game": self.gamecode, "board": self.pickler(self.board)})
+        req = requests.post(f"{self.url}/setboard", json=(data))
+        print(req.json())
         break
-    
 
+  def game_loop(self, uid, gamecode):
 
-
-  def game_loop(self):
     while True:
-      break
-
+      # each time the loop inits, get the new data from the server
+      # at the end of the loop, basically wait until the server returns a response of "your turn"
+      # self.url/turn?game=gamecode&id=uid
+      pass
 
 
 if __name__ == "__main__":

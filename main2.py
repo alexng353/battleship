@@ -3,6 +3,7 @@ import json
 import pickle
 import string
 import requests
+import time
 
 class bcolors:
   HEADER = '\033[95m'
@@ -64,7 +65,7 @@ class Game():
     unpickled = pickle.loads(codecs.decode(string_pickle, "base64"))
     return unpickled
     
-  def key():
+  def key(self):
     print(r"""
     KEY FOR YOUR BOARD:
     0: No battleship
@@ -106,13 +107,15 @@ class Game():
     return True
 
   def valid_coord(self, coord):
-    if len(coord) != 2:
-      return False
-    if not (ord(coord[0]) >= 65 and ord(coord[0]) <= 74):
-      return False
-    if not (int(coord[1]) >= 0 and int(coord[1]) <= 9):
-      return False
-    return True
+    try:
+      if len(coord) != 2:
+        return False
+      if not (ord(coord[0]) >= 65 and ord(coord[0]) <= 74):
+        return False
+      if not (int(coord[1]) >= 0 and int(coord[1]) <= 9):
+        return False
+      return True
+    except: return False
 
   def unused_coord(self, coord):
     coord = self.l2n(coord)
@@ -230,15 +233,22 @@ class Game():
       if command == "new":
         self.game_initialize()
         break
+      if command == "join":
+        tmp = input("Server >>>")
+        self.game_initialize(tmp)
+        break
       elif command == "quit":
         break
       else:
         print("Invalid command.")
 
-
-  def game_initialize(self):
-    req = requests.get(f"{self.url}/new")
-    res = req.json()
+  def game_initialize(self, server=None):
+    if server:
+      req = requests.get(f"{self.url}/join?game={server}")
+      res = req.json()
+    else:
+      req = requests.get(f"{self.url}/new")
+      res = req.json()
 
     self.id=res.get("id")
     self.gamecode=res.get("game")
@@ -258,8 +268,12 @@ class Game():
       print()
 
       ship = input("Ship: ")
-      if ship not in self.ships:
+      if ship not in self.ships:          
         self.warn("Invalid ship")
+        continue
+
+      if ship in self.placed_ships:
+        self.warn(f"You placed \"{ship}\" already")
         continue
 
       length = self.ships[ship]
@@ -302,15 +316,30 @@ class Game():
       if len(self.placed_ships) == 5:
         data = json.dumps({"id": self.id, "game": self.gamecode, "board": self.pickler(self.board)})
         req = requests.post(f"{self.url}/setboard", json=(data))
-        print(req.json())
+        res = req.text
+
+        print(res)
+        self.game_loop()
         break
 
-  def game_loop(self, uid, gamecode):
+  def game_loop(self):
+    # data = {
+    #   "id":uid,
+    #   "game":gamecode
+    # }
+    # req = requests.post(f"{self.url}/ready", json=(data))
+    print(self.id)
+    print(self.gamecode)
 
     while True:
-      # each time the loop inits, get the new data from the server
-      # at the end of the loop, basically wait until the server returns a response of "your turn"
-      # self.url/turn?game=gamecode&id=uid
+      req = requests.post(f"{self.url}/ready", json=({"game":self.gamecode}))
+      res = req.json()
+
+      if res.get("ready") == True:
+        print("wow")
+        break
+      print("not ready")
+      time.sleep(1)
       pass
 
 

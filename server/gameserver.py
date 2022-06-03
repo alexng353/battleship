@@ -1,7 +1,6 @@
 import codecs
 import json
 import pickle
-from xxlimited import Str
 from sanic import Sanic
 from sanic import response
 import uuid

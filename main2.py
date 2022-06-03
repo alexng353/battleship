@@ -42,7 +42,10 @@ class Game():
     self.enemy_shots = []
     self.shots = []
 
-    self.url = "http://localhost:5050"
+    f = open("config.json", "r", encoding="UTF-8")
+    f = json.load(f)
+
+    self.url = f.get("url")
 
     
 

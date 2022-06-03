@@ -179,9 +179,6 @@ class Game():
         print(f"{enemy[j][i]}", end="")
       print(f"\b\b]")
 
-
-  
-
     # for i in range(10):
     #   print(f" {i} {self.board[i]}   | {i} {self.enemy_board[i]}")
     print()
@@ -206,22 +203,6 @@ class Game():
     else:
       return(False)
 
-  def line_intersection(self, line1, line2):
-    xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
-    ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
-
-    def det(a, b):
-        return a[0] * b[1] - a[1] * b[0]
-
-    div = det(xdiff, ydiff)
-    if div == 0:
-       raise Exception('lines do not intersect')
-
-    d = (det(*line1), det(*line2))
-    x = det(d, xdiff) / div
-    y = det(d, ydiff) / div
-    return x, y
-
   def start_loop(self):
     while True:
       print("""
@@ -234,7 +215,10 @@ class Game():
         self.game_initialize()
         break
       if command == "join":
-        tmp = input("Server >>>")
+        tmp = input("Server >>> ")
+        if len(tmp) != 6:
+          print("Invalid server code.")
+          continue
         self.game_initialize(tmp)
         break
       elif command == "quit":
@@ -252,6 +236,8 @@ class Game():
 
     self.id=res.get("id")
     self.gamecode=res.get("game")
+    
+    print("game code: " + self.gamecode)
 
     while True:
       self.print_board()
@@ -319,10 +305,10 @@ class Game():
         res = req.text
 
         print(res)
-        self.game_loop()
+        self.wait_loop()
         break
 
-  def game_loop(self):
+  def wait_loop(self):
     # data = {
     #   "id":uid,
     #   "game":gamecode
@@ -332,15 +318,19 @@ class Game():
     print(self.gamecode)
 
     while True:
-      req = requests.post(f"{self.url}/ready", json=({"game":self.gamecode}))
+      req = requests.post(f"{self.url}/ready", json=(json.dumps({"game":str(self.gamecode)})))
       res = req.json()
 
-      if res.get("ready") == True:
+      if res.get("ready") == "True":
         print("wow")
+        self.game_loop()
         break
-      print("not ready")
-      time.sleep(1)
+      print("not ready" + str(res))
+      time.sleep(3)
       pass
+    
+  def game_loop():
+    pass
 
 
 if __name__ == "__main__":

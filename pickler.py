@@ -17,4 +17,4 @@ def unpickler(string_pickle):
   unpickled = pickle.loads(codecs.decode(string_pickle.encode(), "base64"))
   return unpickled
 
-print(unpickler("gASV9QAAAAAAAABdlChdlChLBUsFSwVLBUsFSwBLAEsASwBLAGVdlChLBEsESwRLBEsASwBLAEsA\nSwBLAGVdlChLA0sDSwNLAEsASwBLAEsASwBLAGVdlChLAksCSwBLAEsASwBLAEsASwBLAGVdlChL\nAUsASwBLAEsASwBLAEsASwBLAGVdlChLAEsASwBLAEsASwBLAEsASwBLAGVdlChLAEsASwBLAEsA\nSwBLAEsASwBLAGVdlChLAEsASwBLAEsASwBLAEsASwBLAGVdlChLAEsASwBLAEsASwBLAEsASwBL\nAGVdlChLAEsASwBLAEsASwBLAEsASwBLAGVlLg==\n"))
+print(unpickler(base64_encoded_board))

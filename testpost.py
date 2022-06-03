@@ -1,8 +1,8 @@
 import requests
 import json
-obj = json.dumps({"id":"CHING CHENG HANJI"})
+obj = json.dumps({"game":"654321"})
 
-req = requests.post("http://localhost:5050/setboard", json=(obj))
+req = requests.post("http://localhost:5050/ready", json=(obj))
 
 
 print(req.text)

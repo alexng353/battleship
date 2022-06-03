@@ -1,4 +1,7 @@
+import codecs
 import json
+import pickle
+from xxlimited import Str
 from sanic import Sanic
 from sanic import response
 import uuid
@@ -20,7 +23,7 @@ def pickler(board):
   return string_pickle
 
 def unpickler(string_pickle):
-  unpickled = pickle.loads(codecs.decode(string_pickle.encode(), "base64"))
+  unpickled = pickle.loads(codecs.decode(string_pickle, "base64"))
   return unpickled
 
 def l2n(coord):
@@ -39,6 +42,7 @@ def hitdet(coord, board):
 
 @app.route("/ready", methods=["POST"])
 async def ready(request):
+  print(str(request.json))
   data = ast.literal_eval(request.json)
   game = data.get("game")
 
@@ -53,20 +57,48 @@ async def ready(request):
   #   "game":game,
   #   "ready":ready
   # }
-  return response.json({'game':game, "ready":ready})
+  return response.json({'game':str(game), "ready":str(ready)})
 
 @app.route("/update", methods=["POST"])
 async def post(request):
   data = ast.literal_eval(request.json)
+  game = data.get("game")
+  uid = data.get("id")
 
-  return response.text(str(data['id']))
+  return response.text("endpoint")
 
+@app.route("/shoot", methods=["POST"])
+async def shoot(request):
+  data = ast.literal_eval(request.json)
+
+  game = data.get("game")
+  coord = data.get("coord")
+  uid = data.get("id")
+
+  p1 = r.hget(game, "p1")
+  p2 = r.hget(game, "p2")
+
+  moves = unpickler(r.hget(game, f"{uid}-moves"))
+
+  if p1 == uid:
+    victim = r.hget(game, p2)
+  else:
+    victim = r.hget(game, p1)
+
+
+  victim = unpickler(victim)
+  
+  hit = hitdet(coord, victim)
+
+# hopefully this works
+  r.hset(game, f"{uid}-moves", pickler(moves.append({coord:hit})))
+
+  return response.json(json.dumps({"game":game, "coord":coord, "hit":hit}))
 
 @app.route("/setboard", methods=["POST"])
 async def setboard(request):
   data = json.loads(request.json)
   r.hset(data.get("game"), data.get("id"), data.get("board"))
-
 
   return response.text(str({data.get("id"), data.get("board")}))
 
@@ -93,7 +125,11 @@ async def setboard(request):
 @app.get("/new")
 async def new(request):
   user_id = str(uuid.uuid4())
-  game_id = random.randint(100000, 999999)
+  # anti collision loop
+  while True:
+    game_id = random.randint(100000, 999999)
+    if r.hget(game_id, "p1") == None:
+      break
 
   r.hset(game_id, "p1", user_id)
 
@@ -119,7 +155,6 @@ async def join(request):
 
     if r.hget(game_id, "p1") == None:
       r.hset(game_id, "p1", user_id)
-
     else:
       r.hset(game_id, "p2", user_id)
 

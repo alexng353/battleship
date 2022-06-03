@@ -20,16 +20,22 @@ If you want to run your own server, create a config.json and set the "url" param
 ### Install all dependencies
 #### Python Deps
 ```bash
-sanic
+pip install sanic
 ```
 
 #### Server deps
+Run the server on **linux/ubuntu** because I literally have not tested it on anything else
 ```bash
-redis
+curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+
+sudo apt-get update
+sudo apt-get install redis
 ```
 Everything else is either using a builtin or will throw an error because I forgor to tell you to install it
 
-<br><br><br>
+<br><br>
 
 The server is made with sanic, so there is probably an exploit in the code that hasn't been found yet. Host at your own risk, I'm just a student learning to code. 
 

@@ -2,13 +2,27 @@
 
 [<img src="https://img.shields.io/badge/GitHub-alexng353-lightgrey">](https://github.com/alexng353/battleship)
 
+## WARNING
+## Code is incomplete because it's due on Jun 7th
+If you're reading this after Jun 7th its because I forgot to update the readme and the game should (probably) work
+#
+
 A command line battleship client written in python and a backend written in python Sanic
 
 Server **must** run on python 3.8.10 because Sanic dependencies are very strange
 
 Client can run on >= python 3.8.x
 
+## Usage
+```bash
+python main.py
+```
+After running the game, follow in game instructions and invite a friend
+
 ## Running a Battleship server
+If you don't want to run your own server, I have one running on http://battleship.ayo.icu
+
+I do not recommend using this because the server it's hosted on is incredibly slow and if you're not on the West Coast of North America the latency will be unbearable. 
 ### Config
 If you want to run your own server, create a config.json and set the "url" paramter to the url and port you're running the server on.
 ```json

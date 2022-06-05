@@ -42,21 +42,13 @@ class Game():
     self.enemy_shots = []
     self.shots = []
 
-    f = open("config.json", "r", encoding="UTF-8")
-    f = json.load(f)
-
-    self.url = f.get("url")    
+    self.url = "http://localhost:5050"
 
     self.start_loop()
   
   def warn(self, msg):
     print(bcolors.FAIL + msg + bcolors.ENDC)
-  
-  def green(self, msg):
-    return(bcolors.OKGREEN + msg + bcolors.ENDC)
 
-  def red(self, msg):
-    return(bcolors.FAIL + msg + bcolors.ENDC)
   def l2n(self,coord):
     return [ord(coord[0])-65,int(coord[1])]
 
@@ -211,20 +203,15 @@ class Game():
 
   def start_loop(self):
     while True:
-      print(f"""
+      print("""
         Welcome to Battleship!
-        Enter {self.green("'new'")} to start a new game.
-        Enter {self.green("'join'")} to join a game with a game code(kahoot style).
-        Enter {self.green("'key'")} to view the key.
-        Enter {self.red("'quit'")} to quit.
+        Enter 'new' to start a new game.
+        Enter 'quit' to quit.
         """)
-      command = input(">>> ")
+      command = input("Command: ")
       if command == "new":
         self.game_initialize()
         break
-      if command == 'key':
-        self.key()
-        continue
       if command == "join":
         tmp = input("Server >>> ")
         if len(tmp) != 6:
@@ -233,10 +220,9 @@ class Game():
         self.game_initialize(tmp)
         break
       elif command == "quit":
-        self.warn("See you next time")
         break
       else:
-        self.warn("Invalid command.")
+        print("Invalid command.")
 
   def game_initialize(self, server=None):
     if server:
@@ -245,33 +231,27 @@ class Game():
     else:
       req = requests.get(f"{self.url}/new")
       res = req.json()
-    
+
     self.id=res.get("id")
     self.gamecode=res.get("game")
     
-    print("game code: " + str(self.gamecode))
+    print("game code: " + self.gamecode)
 
     while True:
       self.print_board()
       print("Choose a ship to place")
-      print(self.green("ship:length"))
       for ship, length in self.ships.items():
-        
         if ship not in self.placed_ships:
           print(f"{ship}: {length+1}")
 
       if len(self.placed_ships) > 0:
         print("\nPlaced ships:")
-
       for ship in self.placed_ships.keys():
         print(f"{ship}")
 
       print()
 
       ship = input("Ship: ")
-      if ship == "exit":
-        self.warn("Goodbye")
-        break
       if ship not in self.ships:          
         self.warn("Invalid ship")
         continue

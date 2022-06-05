@@ -39,6 +39,10 @@ def hitdet(coord, board):
   if value in [1, 2, 3, 4, 5]:
     return(True)
 
+@app.route("/", methods=["GET"])
+async def root(request):
+  return response.text("BATTLESHIP")
+
 @app.route("/ready", methods=["POST"])
 async def ready(request):
   print(str(request.json))
@@ -125,10 +129,7 @@ async def setboard(request):
 async def new(request):
   user_id = str(uuid.uuid4())
   # anti collision loop
-  while True:
-    game_id = random.randint(100000, 999999)
-    if r.hget(game_id, "p1") == None:
-      break
+  game_id = random.randint(100000, 999999)
 
   r.hset(game_id, "p1", user_id)
 

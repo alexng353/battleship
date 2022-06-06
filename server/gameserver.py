@@ -12,7 +12,7 @@ from options import setup_options
 
 import redis
 
-r = redis.Redis(host="localhost", port=6379, db=1)
+r = redis.StrictRedis(host="localhost", port=6379, db=1, decode_responses=True)
 
 app = Sanic(name=__name__)
 
@@ -45,7 +45,6 @@ async def root(request):
 
 @app.route("/ready", methods=["POST"])
 async def ready(request):
-  print(str(request.json))
   data = ast.literal_eval(request.json)
   game = data.get("game")
 
@@ -53,14 +52,10 @@ async def ready(request):
   p2 = r.hget(game, "p2")
 
   ready = False
-  if r.hget(game, p1) and r.hget(game, p2):
+  if r.hget(game, str(p1)) and r.hget(game, str(p2)):
     ready = True
-  
-  # response = {
-  #   "game":game,
-  #   "ready":ready
-  # }
-  return response.json({'game':str(game), "ready":str(ready)})
+
+  return response.json({"ready":ready, "game":game})
 
 @app.route("/update", methods=["POST"])
 async def post(request):

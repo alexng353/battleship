@@ -137,7 +137,7 @@ class Game():
       # move right by length spaces
       return chr(ord(coord[0])+length) + coord[1]
     elif direction == "u":
-      # move up by length spaces
+      # move up by length
       return coord[0] + str(int(coord[1])-length)
     elif direction == "d":
       # move down by length spaces
@@ -339,7 +339,7 @@ class Game():
       req = requests.post(f"{self.url}/ready", json=(json.dumps({"game":str(self.gamecode)})))
       res = req.json()
 
-      if res.get("ready") == "True":
+      if res.get("ready") == True:
         print("wow")
         self.game_loop()
         break
